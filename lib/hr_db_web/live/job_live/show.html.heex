@@ -1,0 +1,29 @@
+<.header>
+  Job {@job.id}
+  <:subtitle>This is a job record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/job/#{@job}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit job</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Job">{@job.job_id}</:item>
+  <:item title="Title">{@job.title}</:item>
+  <:item title="Department">{@job.department}</:item>
+  <:item title="Active">{@job.active}</:item>
+</.list>
+
+<.back navigate={~p"/job"}>Back to job</.back>
+
+<.modal :if={@live_action == :edit} id="job-modal" show on_cancel={JS.patch(~p"/job/#{@job}")}>
+  <.live_component
+    module={HrDbWeb.JobLive.FormComponent}
+    id={@job.id}
+    title={@page_title}
+    action={@live_action}
+    job={@job}
+    patch={~p"/job/#{@job}"}
+  />
+</.modal>

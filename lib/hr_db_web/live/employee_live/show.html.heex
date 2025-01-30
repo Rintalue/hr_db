@@ -1,0 +1,44 @@
+<.header>
+  Employee {@employee.id}
+  <:subtitle>This is a employee record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/employee/#{@employee}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit employee</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Employee">{@employee.employee_id}</:item>
+  <:item title="First name">{@employee.first_name}</:item>
+  <:item title="Last name">{@employee.last_name}</:item>
+  <:item title="Other names">{@employee.other_names}</:item>
+  <:item title="Email">{@employee.email}</:item>
+  <:item title="Department">{@employee.department}</:item>
+  <:item title="Job title">{@employee.job_title}</:item>
+  <:item title="Phone number">{@employee.phone_number}</:item>
+  <:item title="Address">{@employee.address}</:item>
+  <:item title="Supervisor">{@employee.supervisor}</:item>
+  <:item title="Dob">{@employee.dob}</:item>
+  <:item title="Gender">{@employee.gender}</:item>
+  <:item title="Id number">{@employee.id_number}</:item>
+  <:item title="Salary">{@employee.salary}</:item>
+  <:item title="Kra">{@employee.kra}</:item>
+  <:item title="Shif">{@employee.shif}</:item>
+  <:item title="Nssf">{@employee.nssf}</:item>
+  <:item title="Bank account">{@employee.bank_account}</:item>
+  <:item title="Active">{@employee.active}</:item>
+</.list>
+
+<.back navigate={~p"/employee"}>Back to employee</.back>
+
+<.modal :if={@live_action == :edit} id="employee-modal" show on_cancel={JS.patch(~p"/employee/#{@employee}")}>
+  <.live_component
+    module={HrDbWeb.EmployeeLive.FormComponent}
+    id={@employee.id}
+    title={@page_title}
+    action={@live_action}
+    employee={@employee}
+    patch={~p"/employee/#{@employee}"}
+  />
+</.modal>

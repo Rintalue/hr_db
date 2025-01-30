@@ -1,0 +1,29 @@
+<.header>
+  Supervisor {@supervisor.id}
+  <:subtitle>This is a supervisor record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/supervisor/#{@supervisor}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit supervisor</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Supervisor">{@supervisor.supervisor_id}</:item>
+  <:item title="Supervisor name">{@supervisor.supervisor_name}</:item>
+  <:item title="Department">{@supervisor.department}</:item>
+  <:item title="Active">{@supervisor.active}</:item>
+</.list>
+
+<.back navigate={~p"/supervisor"}>Back to supervisor</.back>
+
+<.modal :if={@live_action == :edit} id="supervisor-modal" show on_cancel={JS.patch(~p"/supervisor/#{@supervisor}")}>
+  <.live_component
+    module={HrDbWeb.SupervisorLive.FormComponent}
+    id={@supervisor.id}
+    title={@page_title}
+    action={@live_action}
+    supervisor={@supervisor}
+    patch={~p"/supervisor/#{@supervisor}"}
+  />
+</.modal>

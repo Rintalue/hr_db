@@ -1,0 +1,64 @@
+<.header>
+  Leavedays Application
+  <:actions>
+    <.link patch={~p"/leaveday/new"}>
+      <.button>New Leaveday</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  <%= for {id, leaveday} <- @streams.leaveday_collection do %>
+    <div class="bg-white shadow-md rounded-lg p-4 border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900">
+        <i class="fa-solid fa-user mr-2"></i> <%= leaveday.name %>
+      </h3>
+      <p class="text-sm text-gray-600">
+        <i class="fa-solid fa-id-badge mr-1"></i> Employee ID: <%= leaveday.employee_id %>
+      </p>
+      <p class="text-sm text-gray-600">
+        <i class="fa-solid fa-phone mr-1"></i> Contact: <%= leaveday.phone_number %>
+      </p>
+      <p class="text-sm text-gray-600">
+        <i class="fa-solid fa-calendar-day mr-1"></i> Start: <%= leaveday.start_date %>
+      </p>
+      <p class="text-sm text-gray-600">
+        <i class="fa-solid fa-calendar-check mr-1"></i> End: <%= leaveday.end_date %>
+      </p>
+      <p class="text-sm text-gray-600">
+        <i class="fa-solid fa-list-check mr-1"></i> Remaining Days: <%= leaveday.leave_days %>
+      </p>
+      <p class="text-sm text-gray-600">
+        <i class="fa-solid fa-clipboard mr-1"></i> Justification: <%= leaveday.reason %>
+      </p>
+      <div class="mt-4 flex justify-between items-center">
+
+      <p class={["text-sm font-semibold", (if leaveday.status == "Approved", do: "text-green-600", else: "text-red-600")]}>
+        <i class="fa-solid fa-flag mr-1"></i> Status: <%= leaveday.status %>
+      </p>
+   
+
+     
+       <div class="space-x-3">
+          <.link patch={~p"/employee/#{leaveday}/edit"} class="text-blue-600 hover:text-blue-800">
+            <i class="fa-solid fa-pen"></i>
+          </.link>
+          <.link phx-click={JS.push("delete", value: %{id: leaveday.id}) |> hide("##{id}")} data-confirm="Are you sure?" class="text-red-600 hover:text-red-800">
+            <i class="fa-solid fa-trash"></i>
+          </.link>
+        </div>
+    </div>
+    </div>
+  <% end %>
+</div>
+
+<.modal :if={@live_action in [:new, :edit]} id="leaveday-modal" show on_cancel={JS.patch(~p"/leaveday")}> 
+  <.live_component 
+    module={HrDbWeb.LeavedayLive.FormComponent} 
+    id={@leaveday.id || :new} 
+    title={@page_title} 
+    action={@live_action} 
+    leaveday={@leaveday} 
+    patch={~p"/leaveday"} 
+  />
+</.modal>

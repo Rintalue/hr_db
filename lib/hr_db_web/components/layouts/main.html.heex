@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="csrf-token" content={get_csrf_token()} />
+
+    <.live_title suffix=" · ">
+      <%= "HR_DB" %>
+    </.live_title>
+
+    <!-- Stylesheets -->
+    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha384-IwzUQ67e5iE1+BMJVVK2h8QbKlX3nhkXTxy+EYitT2Furvvu6erqRj1qr8/zEY0S"
+  crossorigin=""
+/>
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha384-wZ9frMWzIwhmPbH5umQJbWo4qF5A6cJXJ2tm1SzEP1mVuO4wsW+qTKilWQMgx1LK"
+  crossorigin=""
+></script>
+<script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}></script>
+<head>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+
+  <!-- Include your other head content here -->
+</head>
+
+  </head>
+
+  <body class="bg-gray-100 text-gray-700 antialiased">
+    <!-- Sidebar -->
+    <aside
+      class="fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 text-gray-300 shadow-lg transition-transform transform -translate-x-full md:translate-x-0"
+      id="sidebar"
+    >
+      <div class="h-16 flex items-center justify-center bg-gray-700">
+       <img src= "/images/hr.jpeg"  style = "width: 40px;
+    height: 40px; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    margin-right:13px;
+    margin-left:-88px;" />
+        <span class="mr-8 text-lg font-semibold">HR_DB</span>
+      </div>
+      
+         
+      <nav class="mt-6">
+        <ul class="flex flex-col">
+          <li class="py-4 px-6">
+            <.link
+              navigate={~p"/"}
+              class="flex items-center text-gray-300 hover:text-white text-lg"
+            > 
+              <i class="fa fa-globe"></i> &nbsp;&nbsp;
+               Dashboard
+            </.link>
+          </li>
+          <li class="py-4 px-6">
+    
+            <.link
+              navigate={~p"/employee"}
+              class="flex items-center text-gray-300 hover:text-white text-lg"
+            >
+              <i class=" 	far fa-address-card"></i> &nbsp;&nbsp;
+              Employees
+            </.link>
+              
+          </li>
+          <li class="py-4 px-6">
+            <.link
+              navigate={~p"/supervisor"}
+              class="flex items-center text-gray-300 hover:text-white text-lg"
+            >
+              <i class="fa fa-users mr-3"></i>
+              Supervisors
+            </.link>
+          </li>
+           <li class="py-4 px-6">
+            <.link
+              navigate={~p"/job"}
+              class="flex items-center text-gray-300 hover:text-white text-lg"
+            >
+              <i class="fa fa-tasks mr-3"></i>
+              Jobs
+            </.link>
+          </li>
+           <li class="py-4 px-6">
+            <.link
+              navigate={~p"/leaveday"}
+              class="flex items-center text-gray-300 hover:text-white text-lg"
+            >
+              <i class="fa fa-file"></i>&nbsp;&nbsp;
+              Leave Days
+            </.link>
+          </li>
+           
+          <li class="py-4 px-6">
+            <.link
+              href={~p"/users/log_out"}
+              method="delete"
+              class="flex items-center text-red-400 hover:text-red-600 text-lg"
+            >
+              <i class="fa fa-sign-out-alt mr-3"></i>
+              Log Out
+            </.link>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex flex-col md:ml-64 transition-all duration-300">
+      <!-- Top Navbar -->
+      <nav
+        class="flex items-center justify-between bg-gray-200 text-gray-700 px-6 py-4 shadow-md"
+      >
+        <button
+          class="md:hidden text-gray-700 hover:text-gray-900"
+           onclick="toggleSidebar()"
+         
+        >
+          <i class="fa fa-bars text-2xl"></i>
+        </button>
+          <%= if @current_user do %>
+        <p class="text-xl font-semibold">Welcome  <%= @current_user.email%>  </p>
+       <%end %>
+       
+        <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+      <%= if @current_user do %>
+        <li class="text-[0.8125rem] leading-6 text-zinc-900">
+          <%= @current_user.email %>
+        </li>
+        <li>
+          <.link
+            href={~p"/users/settings"}
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            <i class="fa fa-user mr-2"></i>
+        
+          </.link>
+        </li>
+ <.link
+          href={~p"/users/log_out"}
+          method="delete"
+          class="text-sm font-semibold text-gray-700 hover:text-red-500"
+        >
+          <i class="fa fa-sign-out-alt mr-2"></i>
+          Log Out
+        </.link>
+     
+      <% else %>
+        <li>
+          <.link
+            href={~p"/users/register"}
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Register
+          </.link>
+        </li>
+        <li>
+          <.link
+            href={~p"/users/log_in"}
+            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          >
+            Log in
+          </.link>
+        </li>
+      <% end %>
+    </ul>
+ </nav>
+      <!-- Flash Messages -->
+      <div class="mx-4 mt-4">
+        <.flash_group flash={@flash} />
+      </div>
+
+      <!-- Dynamic Content -->
+      <main class="flex-grow p-6">
+        <section class="bg-white shadow-lg rounded-lg p-6" style="box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid aquamarine;   
+    overflow:scroll;
+  ">
+          <%= @inner_content %>
+        </section>
+      </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-gray-500 text-sm py-4 bg-gray-200">
+      <p>
+        &copy; <%= Date.utc_today().year %>
+      </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}></script>
+  
+   
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    sidebar.classList.toggle("-translate-x-full");
+  }
+
+  document.addEventListener("click", function (event) {
+    const sidebar = document.getElementById("sidebar");
+    const sidebarButton = document.querySelector("button[onclick='toggleSidebar()']");
+
+    if (
+      !sidebar.contains(event.target) &&  
+      !sidebarButton.contains(event.target) &&  
+      !sidebar.classList.contains("-translate-x-full")  
+    ) {
+      sidebar.classList.add("-translate-x-full"); 
+    }
+  });
+</script>
+
+  </body>
+</html>

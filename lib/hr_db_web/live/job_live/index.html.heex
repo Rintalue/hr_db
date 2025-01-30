@@ -1,0 +1,51 @@
+<.header>
+  Jobs
+  <:actions>
+    <.link patch={~p"/job/new"}>
+      <.button>New Job</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" >
+  <%= for {_id, job} <- @streams.job_collection do %>
+    <div class="bg-white shadow-md rounded-lg p-4 border border-gray-200">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-800"><i class="fa-solid fa-briefcase mr-2"></i> <%= job.title %></h3>
+        <%= if job.active == "true" do %>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+            <i class="fa-solid fa-check-circle text-green-500 mr-1"></i> Active
+          </span>
+        <% else %>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+            <i class="fa-solid fa-times-circle text-red-500 mr-1"></i> Inactive
+          </span>
+        <% end %>
+      </div>
+      <p class="text-gray-600 mt-2"><i class="fa-solid fa-building mr-2"></i> Department: <%= job.department %></p>
+      
+      <div class="mt-4 flex justify-between">
+        <.link patch={~p"/job/#{job}/edit"} class="text-blue-600 hover:text-blue-800">
+          <i class="fa-solid fa-pen"></i> 
+        </.link>
+        <.link 
+          phx-click={JS.push("delete", value: %{id: job.id}) |> hide("##{_id}")} 
+          data-confirm="Are you sure?" 
+          class="text-red-600 hover:text-red-800">
+          <i class="fa-solid fa-trash"></i>
+        </.link>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<.modal :if={@live_action in [:new, :edit]} id="job-modal" show on_cancel={JS.patch(~p"/job")}> 
+  <.live_component 
+    module={HrDbWeb.JobLive.FormComponent} 
+    id={@job.id || :new} 
+    title={@page_title} 
+    action={@live_action} 
+    job={@job} 
+    patch={~p"/job"} 
+  />
+</.modal>

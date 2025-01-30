@@ -1,0 +1,56 @@
+<.header>
+  Listing Employees
+  <:actions>
+    <.link patch={~p"/employee/new"}>
+      <.button>New Employee</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
+  <%= for {_id, employee} <- @streams.employee_collection do %>
+    <div class="bg-white shadow-lg rounded-2xl p-4 border border-gray-200">
+      <div class="flex items-center space-x-4">
+        <img src={employee.image || "/default-avatar.png"} class="h-14 w-14 rounded-full object-cover" alt="Profile Image" />
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900"> <%= employee.first_name %>  <%= employee.last_name %> </h3>
+          <p class="text-sm text-gray-600"> <%= employee.job_title %> </p>
+        </div>
+      </div>
+      <div class="mt-4 space-y-2 text-sm text-gray-700">
+        <p><i class="fa-solid fa-id-badge text-gray-500"></i> ID: <%= employee.employee_id %></p>
+        <p><i class="fa-solid fa-envelope text-gray-500"></i> Email: <%= employee.email %></p>
+        <p><i class="fa-solid fa-phone text-gray-500"></i> Phone: <%= employee.phone_number %></p>
+        <p><i class="fa-solid fa-building text-gray-500"></i> Department: <%= employee.department %></p>
+        <p><i class="fa-solid fa-user-tie text-gray-500"></i> Supervisor: <%= employee.supervisor %></p>
+          <p><i class="fa-solid fa-minus text-gray-500"></i> Leave Balance: <%= employee.leave_balance%></p>
+      </div>
+      <div class="mt-4 flex justify-between items-center">
+
+        <span class={["inline-flex items-center px-2 py-1 rounded text-xs font-medium", (if employee.active == "true", do: "bg-green-100 text-green-800", else: "bg-red-100 text-red-800" )]}>
+          <i class={["fa-solid mr-1", (if employee.active == "true", do: "fa-check text-green-500", else: "fa-times text-red-500")]}></i>
+          <%= if employee.active == "true", do: "Active", else: "Inactive" %>
+        </span>
+        <div class="space-x-3">
+          <.link patch={~p"/employee/#{employee}/edit"} class="text-blue-600 hover:text-blue-800">
+            <i class="fa-solid fa-pen"></i>
+          </.link>
+          <.link phx-click={JS.push("delete", value: %{id: employee.id}) |> hide("##{_id}")} data-confirm="Are you sure?" class="text-red-600 hover:text-red-800">
+            <i class="fa-solid fa-trash"></i>
+          </.link>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<.modal :if={@live_action in [:new, :edit]} id="employee-modal" show on_cancel={JS.patch(~p"/employee")}> 
+  <.live_component 
+    module={HrDbWeb.EmployeeLive.FormComponent} 
+    id={@employee.id || :new} 
+    title={@page_title} 
+    action={@live_action} 
+    employee={@employee} 
+    patch={~p"/employee"} 
+  />
+</.modal>
