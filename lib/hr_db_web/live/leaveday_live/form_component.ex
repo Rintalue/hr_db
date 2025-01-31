@@ -167,6 +167,8 @@ defmodule HrDbWeb.LeavedayLive.FormComponent do
 
 
 
+
+
   def handle_event("validate", %{"leaveday" => leaveday_params}, socket) do
     changeset = Leavedays.change_leaveday(socket.assigns.leaveday, leaveday_params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
@@ -192,12 +194,11 @@ defmodule HrDbWeb.LeavedayLive.FormComponent do
   end
 
   defp save_leaveday(socket, :new, leaveday_params) do
-    # Extract start date and end date from params
     start_date = Map.get(leaveday_params, "start_date")
     end_date = Map.get(leaveday_params, "end_date")
     employee_id = Map.get(leaveday_params, "employee_id")
 
-    # Calculate the leave days if both start_date and end_date are present
+
     case {start_date, end_date} do
       {start_date, end_date} when start_date != "" and end_date != "" ->
         case {Date.from_iso8601(start_date), Date.from_iso8601(end_date)} do

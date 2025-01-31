@@ -1,13 +1,15 @@
-defmodule HrDbWeb.LeavedayLive.Index do
+defmodule HrDbWeb.HrDbWeb.Live.ApprovalLive.Index do
   use HrDbWeb, :live_view_main
 
   alias HrDb.Leavedays
-  alias HrDb.Leavedays.Leaveday
+
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :leavedays, Leavedays.list_leaveday())}
+    leavedays = Leavedays.list_pending_leavedays()
+    {:ok, assign(socket, :leavedays, leavedays)}
   end
+
   @impl true
   def handle_params(params, _url, socket) do
     sort_by = valid_sort_by(params)
@@ -29,36 +31,32 @@ defmodule HrDbWeb.LeavedayLive.Index do
     |> apply_action(socket.assigns.live_action, params)}
 
   end
-
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    socket
-    |> assign(:page_title, "Edit Leaveday")
-    |> assign(:leaveday, Leavedays.get_leaveday!(id))
-  end
-
-  defp apply_action(socket, :new, _params) do
-    socket
-    |> assign(:page_title, "New Leaveday")
-    |> assign(:leaveday, %Leaveday{})
-  end
-
   defp apply_action(socket, :index, _params) do
     socket
-    |> assign(:page_title, "Listing Leaveday")
-    |> assign(:leaveday, nil)
+    |> assign(:page_title, "Leavedays Approval")
+    |> assign(:audit, nil)
   end
 
-  @impl true
-  def handle_info({HrDbWeb.LeavedayLive.FormComponent, {:saved, leaveday}}, socket) do
-    {:noreply, stream_insert(socket, :leavedays, leaveday)}
+  def handle_event("approve", %{"id" => id}, socket) do
+    case Leavedays.approve_leaveday(id) do
+      {:ok, _leaveday} ->
+        leavedays = Leavedays.list_pending_leavedays()
+        {:noreply, assign(socket, :leavedays, leavedays)}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, reason)}
+    end
   end
 
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    leaveday = Leavedays.get_leaveday!(id)
-    {:ok, _} = Leavedays.delete_leaveday(leaveday)
+  def handle_event("decline", %{"id" => id}, socket) do
+    case Leavedays.decline_leaveday(id) do
+      {:ok, _leaveday} ->
+        leavedays = Leavedays.list_pending_leavedays()
+        {:noreply, assign(socket, :leavedays, leavedays)}
 
-    {:noreply, stream_delete(socket, :leavedays, leaveday)}
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, reason)}
+    end
   end
 
 
@@ -108,7 +106,7 @@ defmodule HrDbWeb.LeavedayLive.Index do
   @impl true
   def handle_event("select-per-page", %{"per-page" => per_page}, socket) do
     params = %{socket.assigns.options | per_page: per_page}
-    socket = push_patch(socket, to: ~p"/leaveday?#{params}")
+    socket = push_patch(socket, to: ~p"/approvals?#{params}")
 
     {:noreply, socket}
   end
@@ -140,7 +138,7 @@ defmodule HrDbWeb.LeavedayLive.Index do
     assigns = assign(assigns, :params, params)
 
     ~H"""
-    <.link patch={~p"/leaveday?#{@params}"}>
+    <.link patch={~p"/approvals?#{@params}"}>
       <%= render_slot(@inner_block) %>
       <%= sort_indicator(@sort_by, @options) %>
     </.link>

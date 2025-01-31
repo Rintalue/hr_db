@@ -1,14 +1,66 @@
 <.header>
   Jobs
   <:actions>
+
+  <div class="py-5 inline-flex">
+  <label for="default-search" class="mb-2 text-sm font-medium text-[#808AA2] sr-only ">
+        Search
+      </label>
+      <div class="flex justify-between md:flex-row gap-2 flex-col w-[100%] ">
+        <form
+          class="search"
+          phx-change="search"
+          class="md:w-[90%] flex flex-row gap-2 items-center"
+        >
+          <input
+            type="text"
+            id="search"
+            placeholder="Enter your search query "
+            name="search"
+            class="w-[100%]  mx-auto bg-white    text-[#131217] p-2 px-4  text-sm  focus:ring-0     h-[40px] "
+            style=" border-top: none ;  border-right: none !important;  border-left: none !important;  border-bottom: 2px solid #c5c5c5 !important;"
+          />
+        </form>
+      </div>
+    </div>
+
+    <div
+      class="flex flex-row  cursor-pointer p-2 px-4 h-[40px]  text-[#016db8] text-xl fa fa-retweet"
+      phx-click="view_all"
+      phx-disable-with="Resetting..."
+      phx-value_id="views"
+    >
+    </div>
     <.link patch={~p"/job/new"}>
       <.button>New Job</.button>
     </.link>
+
+      <form action={~p"/downloadjobs_report"} method="get" style="display: inline;">
+  <select name="format" id="format" style="padding: 5px 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+  width: 5pc;
+  margin-left:-6pc;
+  position: relative;
+  top: 5pc;">
+    <option value="csv">CSV</option>
+    <option value="pdf">PDF</option>
+      <option value="png">PNG</option>
+  </select>
+  <button type="submit" class="fa fa-download btn bg-green" style="position:relative; color:green;top:5pc; cursor: pointer;">
+    
+  </button>
+  <button id="print-pdf" class="fa fa-print btn bg-blue" style="color:blue; cursor: pointer; position: relative; top: 5pc;">
+</button>
+
+</form>
   </:actions>
 </.header>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" >
-  <%= for {_id, job} <- @streams.job_collection do %>
+  <%= for {id, job} <- @streams.jobs do %>
     <div class="bg-white shadow-md rounded-lg p-4 border border-gray-200">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-800"><i class="fa-solid fa-briefcase mr-2"></i> <%= job.title %></h3>
@@ -29,7 +81,7 @@
           <i class="fa-solid fa-pen"></i> 
         </.link>
         <.link 
-          phx-click={JS.push("delete", value: %{id: job.id}) |> hide("##{_id}")} 
+          phx-click={JS.push("delete", value: %{id: job.id}) |> hide("##{id}")} 
           data-confirm="Are you sure?" 
           class="text-red-600 hover:text-red-800">
           <i class="fa-solid fa-trash"></i>
@@ -38,6 +90,47 @@
     </div>
   <% end %>
 </div>
+
+<div class="footer flex items-center">
+    <form class="inline-flex">
+      <select
+        name="per-page"
+        class="w-[60px] ml-[-39.25rem]"
+        style="border-top: none;border-left: none;border-right: none;"
+        phx-change="select-per-page"
+      >
+        <%= Phoenix.HTML.Form.options_for_select(
+          [50, 25, 15, 10, 5],
+          @options.per_page
+        ) %>
+        <label for="per-page">per page</label>
+      </select>
+    </form>
+    <div class="pagination">
+      <.link
+        :if={@options.page > 1}
+        patch={~p"/job?#{%{@options | page: @options.page - 1}}"}
+      >
+        Previous
+      </.link>
+      <.link
+        :for={
+          {page_number, current_page?} <-
+            pages(@options, @jobs_count)
+        }
+        class={if current_page?, do: "active"}
+        patch={~p"/job?#{%{@options | page: page_number}}"}
+      >
+        <%= page_number %>
+      </.link>
+      <.link
+        :if={more_pages?(@options, @jobs_count)}
+        patch={~p"/job?#{%{@options | page: @options.page + 1}}"}
+      >
+        Next
+      </.link>
+    </div>
+  </div>
 
 <.modal :if={@live_action in [:new, :edit]} id="job-modal" show on_cancel={JS.patch(~p"/job")}> 
   <.live_component 

@@ -1,14 +1,65 @@
 <.header>
-  Listing Supervisors
+Supervisors
   <:actions>
+
+  <div class="py-5 inline-flex">
+  <label for="default-search" class="mb-2 text-sm font-medium text-[#808AA2] sr-only ">
+        Search
+      </label>
+      <div class="flex justify-between md:flex-row gap-2 flex-col w-[100%] ">
+        <form
+          class="search"
+          phx-change="search"
+          class="md:w-[90%] flex flex-row gap-2 items-center"
+        >
+          <input
+            type="text"
+            id="search"
+            placeholder="Enter your search query "
+            name="search"
+            class="w-[100%]  mx-auto bg-white    text-[#131217] p-2 px-4  text-sm  focus:ring-0     h-[40px] "
+            style=" border-top: none ;  border-right: none !important;  border-left: none !important;  border-bottom: 2px solid #c5c5c5 !important;"
+          />
+        </form>
+      </div>
+    </div>
+
+    <div
+      class="flex flex-row  cursor-pointer p-2 px-4 h-[40px]  text-[#016db8] text-xl fa fa-retweet"
+      phx-click="view_all"
+      phx-disable-with="Resetting..."
+      phx-value_id="views"
+    >
+    </div>
     <.link patch={~p"/supervisor/new"}>
       <.button>New Supervisor</.button>
     </.link>
+      <form action={~p"/downloadsupervisors_report"} method="get" style="display: inline;">
+  <select name="format" id="format" style="padding: 5px 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+  width: 5pc;
+  margin-left:-6pc;
+  position: relative;
+  top: 5pc;">
+    <option value="csv">CSV</option>
+    <option value="pdf">PDF</option>
+      <option value="png">PNG</option>
+  </select>
+  <button type="submit" class="fa fa-download btn bg-green" style="position:relative; color:green;top:5pc; cursor: pointer;">
+    
+  </button>
+  <button id="print-pdf" class="fa fa-print btn bg-blue" style="color:blue; cursor: pointer; position: relative; top: 5pc;">
+</button>
+
+</form>
   </:actions>
 </.header>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-  <%= for {_id, supervisor} <- @streams.supervisor_collection do %>
+  <%= for {id, supervisor} <- @streams.supervisors do %>
     <div class={"bg-white shadow-lg rounded-lg p-6 border-l-4 " <> if supervisor.active == "true", do: "border-green-500", else: "border-red-500"}>
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900 flex items-center">
@@ -20,7 +71,7 @@
             <i class="fa-solid fa-pen"></i>
           </.link>
           <.link
-            phx-click={JS.push("delete", value: %{id: supervisor.id}) |> hide("##{_id}")}
+            phx-click={JS.push("delete", value: %{id: supervisor.id}) |> hide("##{id}")}
             data-confirm="Are you sure?"
             class="text-red-500 hover:text-red-700 ml-4"
           >
@@ -56,6 +107,48 @@
     </div>
   <% end %>
 </div>
+
+<div class="footer flex items-center">
+    <form class="inline-flex">
+      <select
+        name="per-page"
+        class="w-[60px] ml-[-39.25rem]"
+        style="border-top: none;border-left: none;border-right: none;"
+        phx-change="select-per-page"
+      >
+        <%= Phoenix.HTML.Form.options_for_select(
+          [50, 25, 15, 10, 5],
+          @options.per_page
+        ) %>
+        <label for="per-page">per page</label>
+      </select>
+    </form>
+    <div class="pagination">
+      <.link
+        :if={@options.page > 1}
+        patch={~p"/supervisor?#{%{@options | page: @options.page - 1}}"}
+      >
+        Previous
+      </.link>
+      <.link
+        :for={
+          {page_number, current_page?} <-
+            pages(@options, @supervisors_count)
+        }
+        class={if current_page?, do: "active"}
+        patch={~p"/supervisor?#{%{@options | page: page_number}}"}
+      >
+        <%= page_number %>
+      </.link>
+      <.link
+        :if={more_pages?(@options, @supervisors_count)}
+        patch={~p"/supervisor?#{%{@options | page: @options.page + 1}}"}
+      >
+        Next
+      </.link>
+    </div>
+  </div>
+
 <.modal :if={@live_action in [:new, :edit]} id="supervisor-modal" show on_cancel={JS.patch(~p"/supervisor")}>
   <.live_component
     module={HrDbWeb.SupervisorLive.FormComponent}

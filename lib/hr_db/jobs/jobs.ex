@@ -21,6 +21,69 @@ defmodule HrDb.Jobs do
     Repo.all(Job)
   end
 
+
+
+  def list_job(options) when is_map(options) do
+    from(a in Job)
+    |> sort(options)
+    |> paginate(options)
+    |> Repo.all()
+  end
+
+  defp sort(query, %{sort_by: sort_by, sort_order: sort_order}) do
+    order_by(query, {^sort_order, ^sort_by})
+  end
+
+  defp sort(query, _options), do: query
+
+  defp paginate(query, %{page: page, per_page: per_page}) do
+    offset = max((page - 1) * per_page, 0)
+
+    query
+    |> limit(^per_page)
+    |> offset(^offset)
+  end
+
+  defp paginate(query, _options), do: query
+
+  def count_job do
+    Repo.aggregate(Job, :count, :id)
+  end
+
+  def get_search_results(search_term, options) do
+    from(u in Job,
+      where:
+        fragment("? LIKE ?", u.inserted_at, ^"%#{search_term}%") or
+          fragment("? LIKE ?", u.job_id, ^"%#{search_term}%") or
+          fragment("? LIKE ?", u.title, ^"%#{search_term}%") or
+          fragment("? LIKE ?", u.department, ^"%#{search_term}%") or
+          fragment("? LIKE ?", u.active, ^"%#{search_term}%"),
+          order_by: [{^options.sort_order, ^options.sort_by}]
+
+
+          )
+
+    |> paginate(options)
+    |> Repo.all()
+  end
+
+  def count_job_query(search_term, options) do
+    from(u in Job,
+      where:
+        fragment("? LIKE ?", u.inserted_at, ^"%#{search_term}%") or
+          fragment("? LIKE ?", u.job_id, ^"%#{search_term}%") or
+          fragment("? LIKE ?", u.title, ^"%#{search_term}%") or
+          fragment("? LIKE ?", u.department, ^"%#{search_term}%") or
+          fragment("? LIKE ?", u.active, ^"%#{search_term}%"),
+          order_by: [{^options.sort_order, ^options.sort_by}]
+
+
+          )
+    |> paginate(options)
+    |> Repo.aggregate(:count, :id)
+  end
+
+
   @doc """
   Gets a single job.
 

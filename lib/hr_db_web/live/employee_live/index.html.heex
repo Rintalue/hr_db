@@ -1,14 +1,65 @@
 <.header>
   Listing Employees
   <:actions>
+
+  <div class="py-5 inline-flex">
+  <label for="default-search" class="mb-2 text-sm font-medium text-[#808AA2] sr-only ">
+        Search
+      </label>
+      <div class="flex justify-between md:flex-row gap-2 flex-col w-[100%] ">
+        <form
+          class="search"
+          phx-change="search"
+          class="md:w-[90%] flex flex-row gap-2 items-center"
+        >
+          <input
+            type="text"
+            id="search"
+            placeholder="Enter your search query "
+            name="search"
+            class="w-[100%]  mx-auto bg-white    text-[#131217] p-2 px-4  text-sm  focus:ring-0     h-[40px] "
+            style=" border-top: none ;  border-right: none !important;  border-left: none !important;  border-bottom: 2px solid #c5c5c5 !important;"
+          />
+        </form>
+      </div>
+    </div>
+
+    <div
+      class="flex flex-row  cursor-pointer p-2 px-4 h-[40px]  text-[#016db8] text-xl fa fa-retweet"
+      phx-click="view_all"
+      phx-disable-with="Resetting..."
+      phx-value_id="views"
+    >
+    </div>
     <.link patch={~p"/employee/new"}>
       <.button>New Employee</.button>
     </.link>
+      <form action={~p"/downloademployees_report"} method="get" style="display: inline;">
+  <select name="format" id="format" style="padding: 5px 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+  width: 5pc;
+  margin-left:-6pc;
+  position: relative;
+  top: 5pc;">
+    <option value="csv">CSV</option>
+    <option value="pdf">PDF</option>
+      <option value="png">PNG</option>
+  </select>
+  <button type="submit" class="fa fa-download btn bg-green" style="position:relative; color:green;top:5pc; cursor: pointer;">
+    
+  </button>
+  <button id="print-pdf" class="fa fa-print btn bg-blue" style="color:blue; cursor: pointer; position: relative; top: 5pc;">
+</button>
+
+</form>
   </:actions>
 </.header>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
-  <%= for {_id, employee} <- @streams.employee_collection do %>
+  <%= for {id, employee} <- @streams.employees do %>
     <div class="bg-white shadow-lg rounded-2xl p-4 border border-gray-200">
       <div class="flex items-center space-x-4">
         <img src={employee.image || "/default-avatar.png"} class="h-14 w-14 rounded-full object-cover" alt="Profile Image" />
@@ -35,7 +86,7 @@
           <.link patch={~p"/employee/#{employee}/edit"} class="text-blue-600 hover:text-blue-800">
             <i class="fa-solid fa-pen"></i>
           </.link>
-          <.link phx-click={JS.push("delete", value: %{id: employee.id}) |> hide("##{_id}")} data-confirm="Are you sure?" class="text-red-600 hover:text-red-800">
+          <.link phx-click={JS.push("delete", value: %{id: employee.id}) |> hide("##{id}")} data-confirm="Are you sure?" class="text-red-600 hover:text-red-800">
             <i class="fa-solid fa-trash"></i>
           </.link>
         </div>
@@ -44,6 +95,46 @@
   <% end %>
 </div>
 
+<div class="footer flex items-center">
+    <form class="inline-flex">
+      <select
+        name="per-page"
+        class="w-[60px] ml-[-39.25rem]"
+        style="border-top: none;border-left: none;border-right: none;"
+        phx-change="select-per-page"
+      >
+        <%= Phoenix.HTML.Form.options_for_select(
+          [50, 25, 15, 10, 5],
+          @options.per_page
+        ) %>
+        <label for="per-page">per page</label>
+      </select>
+    </form>
+    <div class="pagination">
+      <.link
+        :if={@options.page > 1}
+        patch={~p"/employee?#{%{@options | page: @options.page - 1}}"}
+      >
+        Previous
+      </.link>
+      <.link
+        :for={
+          {page_number, current_page?} <-
+            pages(@options, @employees_count)
+        }
+        class={if current_page?, do: "active"}
+        patch={~p"/employee?#{%{@options | page: page_number}}"}
+      >
+        <%= page_number %>
+      </.link>
+      <.link
+        :if={more_pages?(@options, @employees_count)}
+        patch={~p"/employee?#{%{@options | page: @options.page + 1}}"}
+      >
+        Next
+      </.link>
+    </div>
+  </div>
 <.modal :if={@live_action in [:new, :edit]} id="employee-modal" show on_cancel={JS.patch(~p"/employee")}> 
   <.live_component 
     module={HrDbWeb.EmployeeLive.FormComponent} 

@@ -1,4 +1,5 @@
 defmodule HrDbWeb.Router do
+  alias HrDbWeb.Live.ApprovalLive
   use HrDbWeb, :router
 
   import HrDbWeb.UserAuth
@@ -100,6 +101,18 @@ defmodule HrDbWeb.Router do
 
     live "/leaveday/:id", LeavedayLive.Show, :show
     live "/leaveday/:id/show/edit", LeavedayLive.Show, :edit
+
+    live "/approvals", ApprovalLive.Index, :index
+
+
+    get "/downloadleavedays_report", ReportController, :download_leavedays_report
+
+    get "/downloademployees_report", ReportController, :download_employees_report
+
+    get "/downloadsupervisors_report", ReportController, :download_supervisors_report
+
+
+    get "/downloadjobs_report", ReportController, :download_jobs_report
 
     end
   end
